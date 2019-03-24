@@ -16,7 +16,6 @@ def setup():
     noLoop()
 
 
-        
 def draw():
     all_line = list()
     # set white line
@@ -38,21 +37,24 @@ def draw():
         source = p2id[item[4]]
         source_pos = cp.getCoordinates(item[2], source)
         # print(b_time)
+        linewidth = round(int(item[1])/3)
         if '+' in item[5]:
             targets = item[5].split('+')
             tgs = [p2id[t] for t in targets]
             for tg in tgs:
                 tg_pos = cp.getCoordinates(item[3], tg)
-
-                strokeWeight(round(int(item[1])/3))
+                strokeWeight(linewidth)
+                ellipse(tg_pos[0], tg_pos[1], linewidth,linewidth)
                 line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
                 strokeWeight(1)
                 idx = len(all_line)
                 all_line.append([source_pos, tg_pos, idx])
+            ellipse(source_pos[0],source_pos[1], linewidth, linewidth)
         else:
             tg = p2id[item[5]]
             tg_pos = cp.getCoordinates(item[3], tg)
-            strokeWeight(round(int(item[1])/3))
+            strokeWeight(linewidth)
+            ellipse(tg_pos[0], tg_pos[1], linewidth, linewidth)
             line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
             strokeWeight(1)
             idx = len(all_line)
