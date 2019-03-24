@@ -107,7 +107,7 @@ class sectorPlate(object):
         distance between circulars.
         Note: leave margins on the canvas, thus set partitions to be person_nums+1.
         """
-        return self.center_x / (self.person_nums + 1)
+        return self.center_x / (self.person_nums + 1 + 3)
 
     def str2sec(self, time):
         """
@@ -129,7 +129,7 @@ class sectorPlate(object):
         timestamp = self.str2sec(timestamp)
         current_angle = self.start_angle + self.angle_scale*timestamp
         polar_angle = 90-current_angle
-        current_radius = (person_id+1)*self.radius_scale
+        current_radius = (person_id+1+3)*self.radius_scale
         y = current_radius*math.sin(polar_angle/180*math.pi)
         x = current_radius*math.cos(polar_angle/180*math.pi)
         return x+self.center_x, self.center_y - y
