@@ -76,7 +76,7 @@ class circularPlate(object):
         current_radius = (person_id+1)*self.radius_scale
         y = current_radius*math.sin(polar_angle/180*math.pi)
         x = current_radius*math.cos(polar_angle/180*math.pi)
-        return x+self.center_x, y+self.center_y
+        return x+self.center_x, self.center_y - y
         
     
     
