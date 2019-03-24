@@ -1,5 +1,7 @@
 import constant
 from circularPlate import sectorPlate
+import math
+
 from datetime import datetime
 
 p2id = constant.person_id
@@ -19,6 +21,7 @@ def draw():
     all_line = list()
     # set white line
     stroke(c1)
+    stroke(0, 150, 255, 85)
     l_time = 0
     with open('hero.csv', 'r') as infile:
         data = infile.readlines()
@@ -40,20 +43,19 @@ def draw():
             tgs = [p2id[t] for t in targets]
             for tg in tgs:
                 tg_pos = cp.getCoordinates(item[3], tg)
-                print source_pos
-                print tg_pos
+
+                strokeWeight(round(int(item[1])/3))
                 line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
+                strokeWeight(1)
                 idx = len(all_line)
-                # print('{}--{}'.format(source, tg))
                 all_line.append([source_pos, tg_pos, idx])
         else:
             tg = p2id[item[5]]
             tg_pos = cp.getCoordinates(item[3], tg)
+            strokeWeight(round(int(item[1])/3))
             line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
+            strokeWeight(1)
             idx = len(all_line)
-            print source_pos
-            print tg_pos
-            # print('{}--{}'.format(source, tg))
             all_line.append([source_pos, tg_pos, idx])
 
 

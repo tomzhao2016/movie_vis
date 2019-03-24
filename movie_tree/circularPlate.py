@@ -80,7 +80,7 @@ class circularPlate(object):
         
     
 class sectorPlate(object):
-    def __init__(self,total_time,person_nums,sector_range = 120,canvas_size=(500,500)):
+    def __init__(self,total_time,person_nums,sector_range = 160,canvas_size=(500,500)):
         self.canvas_size = canvas_size
         self.canvas_height, self.canvas_width = canvas_size
 
@@ -97,7 +97,7 @@ class sectorPlate(object):
         self.angle_scale = self.getAngleScale()
 
     def getSectorCenterCoords(self):
-        return self.canvas_width/2,self.canvas_height*float(2/3)
+        return self.canvas_width/2,self.canvas_height*(2.0/3.0)
 
     def getAngleScale(self):
         return self.sector_range/float(self.total_time)
@@ -129,7 +129,6 @@ class sectorPlate(object):
         timestamp = self.str2sec(timestamp)
         current_angle = self.start_angle + self.angle_scale*timestamp
         polar_angle = 90-current_angle
-        print self.center_y
         current_radius = (person_id+1)*self.radius_scale
         y = current_radius*math.sin(polar_angle/180*math.pi)
         x = current_radius*math.cos(polar_angle/180*math.pi)
