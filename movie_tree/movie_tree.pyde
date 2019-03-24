@@ -1,4 +1,5 @@
 import constant
+import math
 from circularPlate import circularPlate
 from datetime import datetime
 
@@ -40,16 +41,18 @@ def draw():
             tgs = [p2id[t] for t in targets]
             for tg in tgs:
                 tg_pos = cp.getCoordinates(item[3], tg)
+                strokeWeight(round(int(item[1])/3))
                 line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
+                strokeWeight(1)
                 idx = len(all_line)
-                print('{}--{}'.format(source, tg))
                 all_line.append([source_pos, tg_pos, idx])
         else:
             tg = p2id[item[5]]
             tg_pos = cp.getCoordinates(item[3], tg)
+            strokeWeight(round(int(item[1])/3))
             line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
+            strokeWeight(1)
             idx = len(all_line)
-            print('{}--{}'.format(source, tg))
             all_line.append([source_pos, tg_pos, idx])
 
 
