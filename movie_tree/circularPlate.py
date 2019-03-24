@@ -79,8 +79,65 @@ class circularPlate(object):
         return x+self.center_x, self.center_y - y
         
     
-    
-    
+class sectorPlate(object):
+    def __init__(self,total_time,person_nums,sector_range = 120,canvas_size=(500,500)):
+        self.canvas_size = canvas_size
+        self.canvas_height, self.canvas_width = canvas_size
+
+        self.sector_range = sector_range
+        self.center_x, self.center_y = self.getSectorCenterCoords()
+
+        self.person_nums = person_nums  # number of concentric circles
+        self.radius_scale = self.getRadiusScale()
+
+        self.start_angle = -sector_range/2
+        self.end_angle = sector_range/2
+
+        self.total_time = self.str2sec(total_time)
+        self.angle_scale = self.getAngleScale()
+
+    def getSectorCenterCoords(self):
+        return self.canvas_width/2,self.canvas_height*float(2/3)
+
+    def getAngleScale(self):
+        return self.sector_range/float(self.total_time)
+
+    def getRadiusScale(self):
+        """
+        distance between circulars.
+        Note: leave margins on the canvas, thus set partitions to be person_nums+1.
+        """
+        return self.center_x / (self.person_nums + 1)
+
+    def str2sec(self, time):
+        """
+        Input: string.
+        Output: Integer.
+        convert time string into seconds.
+        """
+        return int(time[:2]) * 3600 + int(time[2:4]) * 60 + int(time[4:6])
+
+    def getCoordinates(self,timestamp,person_id):
+        """
+        Find x,y in polar coordinates.
+        Inputs:
+            timestamp: string, e.g. '001125' is 00:11:25.
+            person_id: the id of the circular.
+        Output: tuple of floats. (x,y)
+        convert time string into seconds.
+        """
+        timestamp = self.str2sec(timestamp)
+        current_angle = self.start_angle + self.angle_scale*timestamp
+        polar_angle = 90-current_angle
+        print self.center_y
+        current_radius = (person_id+1)*self.radius_scale
+        y = current_radius*math.sin(polar_angle/180*math.pi)
+        x = current_radius*math.cos(polar_angle/180*math.pi)
+        return x+self.center_x, self.center_y - y
+
+
+
+
         
         
         

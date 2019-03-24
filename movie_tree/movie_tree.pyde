@@ -1,5 +1,5 @@
 import constant
-from circularPlate import circularPlate
+from circularPlate import sectorPlate
 from datetime import datetime
 
 p2id = constant.person_id
@@ -24,7 +24,7 @@ def draw():
         data = infile.readlines()
     
     total_time = data[-1].split(',')[3]
-    cp = circularPlate(canvas_size=(height, width), start_angle=0, total_time=total_time, person_nums=len(p2id))
+    cp = sectorPlate(canvas_size=(height, width), total_time=total_time, person_nums=len(p2id))
     for dt in data:
         item = dt.split(',')
         b_time = str2time(item[2])
@@ -40,16 +40,20 @@ def draw():
             tgs = [p2id[t] for t in targets]
             for tg in tgs:
                 tg_pos = cp.getCoordinates(item[3], tg)
+                print source_pos
+                print tg_pos
                 line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
                 idx = len(all_line)
-                print('{}--{}'.format(source, tg))
+                # print('{}--{}'.format(source, tg))
                 all_line.append([source_pos, tg_pos, idx])
         else:
             tg = p2id[item[5]]
             tg_pos = cp.getCoordinates(item[3], tg)
             line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
             idx = len(all_line)
-            print('{}--{}'.format(source, tg))
+            print source_pos
+            print tg_pos
+            # print('{}--{}'.format(source, tg))
             all_line.append([source_pos, tg_pos, idx])
 
 
