@@ -134,8 +134,12 @@ class sectorPlate(object):
         x = current_radius*math.cos(polar_angle/180*math.pi)
         return x+self.center_x, self.center_y - y
 
+    def getCurrentAngle(self,timestamp):
+        timestamp = self.str2sec(timestamp)
+        return self.start_angle + self.angle_scale*timestamp
+
     def drawSector(self):
-        stroke(255,255,255,50)
+        stroke(255,255,255,20)
         start_angle = -(180-(180-self.sector_range)/2.0)/180.0*math.pi
         end_angle = -(180-self.sector_range)/2.0/180.0*math.pi
         for i in range(self.person_nums):
