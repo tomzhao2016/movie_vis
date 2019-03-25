@@ -17,6 +17,7 @@ def setup():
 
 
 def draw():
+
     all_line = list()
     # set white line
     stroke(c1)
@@ -26,7 +27,10 @@ def draw():
         data = infile.readlines()
     
     total_time = data[-1].split(',')[3]
+
     cp = sectorPlate(canvas_size=(height, width), total_time=total_time, person_nums=len(p2id))
+    noFill()
+    cp.drawSector()
     for dt in data:
         item = dt.split(',')
         b_time = str2time(item[2])

@@ -134,6 +134,17 @@ class sectorPlate(object):
         x = current_radius*math.cos(polar_angle/180*math.pi)
         return x+self.center_x, self.center_y - y
 
+    def drawSector(self):
+        stroke(255,255,255,50)
+        start_angle = -(180-(180-self.sector_range)/2.0)/180.0*math.pi
+        end_angle = -(180-self.sector_range)/2.0/180.0*math.pi
+        for i in range(self.person_nums):
+            arc(self.center_x, self.center_y, (i+1+3)*self.radius_scale*2, (i+1+3)*self.radius_scale*2,
+                start_angle, end_angle)
+        stroke(0, 150, 255, 85)
+
+
+
 
 
 
