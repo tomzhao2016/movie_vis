@@ -7,6 +7,7 @@ from datetime import datetime
 p2id = constant.person_id
 ap_time = constant.appear_time
 
+
 circle_ls = list()
 c1 = color(255, 255, 255)
 
@@ -40,7 +41,6 @@ def draw():
         
         source = p2id[item[4]]
         source_pos = cp.getCoordinates(item[2], source)
-        # print(b_time)
         linewidth = 1#round(int(item[1])/3)
         if '+' in item[5]:
             targets = item[5].split('+')
@@ -50,6 +50,8 @@ def draw():
                 strokeWeight(linewidth)
                 ellipse(tg_pos[0], tg_pos[1], linewidth,linewidth)
                 line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
+                ang = (tg_pos[1] - source_pos[1]) / (tg_pos[0] - source_pos[0])
+                ang = radians(ang)
                 strokeWeight(1)
                 idx = len(all_line)
                 all_line.append([source_pos, tg_pos, idx])
@@ -61,10 +63,43 @@ def draw():
             ellipse(tg_pos[0], tg_pos[1], linewidth, linewidth)
             ellipse(source_pos[0],source_pos[1], linewidth, linewidth)
             line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
+            ang = (tg_pos[1] - source_pos[1]) / (tg_pos[0] - source_pos[0])
+            ang = radians(atan(ang))
+            
+            pushMatrix()
+            if tg_pos[1] > source_pos[1]:
+                translate(source_pos[0], source_pos[1])
+            else:
+                translate(tg_pos[0], tg_pos[1])
+            rotate(ang)
+            branch(20, int(item[1]))
+            popMatrix()
             strokeWeight(1)
             idx = len(all_line)
             all_line.append([source_pos, tg_pos, idx])
 
+
+
+def branch(h=20, r=1, ang=radians(12)):
+    """
+    h: tree height
+    r: round number
+    """
+    h *= 0.8
+    if r > 0:
+        pushMatrix()
+        rotate(ang)
+        line(0, 0, 0, -h)
+        translate(0, -h)
+        branch(h, r-1, ang)
+        popMatrix()
+        
+        pushMatrix()
+        rotate(-ang)
+        line(0, 0, 0, -h)
+        translate(0, -h)
+        branch(h, r-1, -ang)
+        popMatrix()
 
 def mouseClicked(): 
     pass
