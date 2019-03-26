@@ -138,6 +138,7 @@ def draw():
     noFill()
     cp.drawSector()
     fill(255)
+    saveFrame("tree-######.png")
     
 def drawEllipseByID(x,y,id,ellipse_width=2):
     
