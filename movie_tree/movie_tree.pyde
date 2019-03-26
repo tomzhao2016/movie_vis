@@ -129,7 +129,7 @@ def draw():
         rotate(ang)
         fill(255, 79, 89) # ellipse red
         stroke(255, 79, 89) # line red
-        bs[ind].branch(linewidth=linewidth,freq=6,h=int(item[1])*6 ,r=2)
+        bs[ind].branch(linewidth=linewidth,freq=6,h=int(item[1])*6,r=2)
         fill(255)
         popMatrix()
         strokeWeight(1)
