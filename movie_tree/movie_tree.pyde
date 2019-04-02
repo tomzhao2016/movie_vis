@@ -1,145 +1,155 @@
 import constant
 from circularPlate import sectorPlate
+from movieProfile import movieProfile
 import math
 from datetime import datetime
 
-p2id = constant.person_id
-ap_time = constant.appear_time
-female_list = constant.female_list
-circle_ls = list()
-c1 = color(255, 255, 255)
-bs=[] # each episode is a branch, this is a global variable.
+bs = [] # each episode is a branch, this is a global variable.
 cir = []
+
+# Hero
+#  h_size = 6
+# freq_size = 1
+
+# Lovers
+h_size = 3
+freq_size = 0.2
+
 def setup():
     size(800, 800)
     frameRate(24)
     background(0)
     global cir
+    global mp
+    draw_color_line = False
     
+    # Hero
+    # mp = movieProfile(file_dir='hero/hero.csv',female_file_dir='hero/hero_female.csv',female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
     
-    with open('hero.csv', 'r') as infile:
-        data = infile.readlines()
-    for dt in data:
+    # Lovers
+    mp = movieProfile(file_dir='Lovers/movie.csv',female_file_dir='Lovers/movie_female.csv',female_names=['jn','am','xm','nx','dj'],character_size={'nx':1.2,'jn':1.5})
+
+    for _ in range(mp.LINE_NUM):
         bs.append(Branch()) # initialize branches
-        
+    
     for img_ind in range(5,20):
-        with open('hero.csv', 'r') as infile:
-            data = infile.readlines()
-        total_time = data[-1].split(',')[3]
-        cp = sectorPlate(canvas_size=(height, width), total_time=total_time, person_nums=len(p2id))
         pg = createGraphics(800,800)
         pg.beginDraw()
         pg.background(0)
-        # pg.colorMode(RGB)
-        for ind,dt in enumerate(data):
-            item = dt.split(',')
-            b_time = str2time(item[2])
-            e_time = str2time(item[3])
-            l_time = e_time
+        # all dialogs
+        for line_ind in range(mp.LINE_NUM):
+            # draw lines
+            source_x, source_y = mp.source_points[line_ind]
+            target_points = mp.target_points[line_ind]
+            source_id = mp.source_ids[line_ind]
+            target_ids = mp.target_ids[line_ind]
+            dialog_num = mp.dialog_nums[line_ind]
+            is_female = False
+            if source_id in mp.female_list:
+                is_female = True
+            drawEllipseInGraphics(pg,source_x,source_y,mp.id2size(source_id),opa=img_ind,is_female=is_female)
             
-            source = p2id[item[4]]
-            source_pos = cp.getCoordinates(item[2], source)
-            drawEllipseInGraphics(pg,source_pos[0],source_pos[1],source,opa=img_ind)
-            
-            # multiple targets
-            if '+' in item[5]: 
-                targets = item[5].split('+')
-                tgs = [p2id[t] for t in targets]
-                for tg in tgs:
-                    tg_pos = cp.getCoordinates(item[3], tg)
-                    drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,opa=img_ind)
-            else:
-                tg = p2id[item[5]]
-                tg_pos = cp.getCoordinates(item[3], tg)
-                drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,opa=img_ind)
+            # target may contain multiple person
+            for tar_ind in range(len(target_points)):
+                target_x = target_points[tar_ind][0]
+                target_y = target_points[tar_ind][1]
+                target_id = target_ids[tar_ind]
+                is_female = False
+                if target_id in mp.female_list:
+                    is_female = True
+                drawEllipseInGraphics(pg,target_x,target_y,mp.id2size(target_id),opa=img_ind,is_female=is_female)
                 
-        with open('hero_female.csv', 'r') as infile:
-            data = infile.readlines()
-    
-        for ind,dt in enumerate(data):
-            item = dt.split(',')
-            b_time = str2time(item[2])
-            e_time = str2time(item[3])
-            l_time = e_time
-            
-            source = p2id[item[4]]
-            source_pos = cp.getCoordinates(item[2], source)
-            drawEllipseInGraphics(pg,source_pos[0],source_pos[1],source,ellipse_color='red',opa =img_ind)
-    
-            if '+' in item[5]:
-                targets = item[5].split('+')
-                tgs = [p2id[t] for t in targets]
-                for tg in tgs:
-                    tg_pos = cp.getCoordinates(item[3], tg)
-                    drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,ellipse_color='red',opa = img_ind)
-            else:
-                tg = p2id[item[5]]
-                tg_pos = cp.getCoordinates(item[3], tg)
-                drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,ellipse_color='red',opa = img_ind)
+                # draw lines
+                linewidth = ceil(dialog_num/4.0) # propotional to dialog nums in each episode
+                strokeWeight(linewidth)
+                pg.stroke(0, 150, 255, 95)
+                if not draw_color_line:
+                    pg.line(source_x, source_y, target_x, target_y)
+                else:
+                    drawColorLine()
+                
+        # female dialogs
+        if not draw_color_line:
+            for line_ind in range(mp.FEMALE_LINE_NUM):
+                # draw lines
+                source_x, source_y = mp.female_source_points[line_ind]
+                target_points = mp.female_target_points[line_ind]
+                source_id = mp.female_source_ids[line_ind]
+                target_ids = mp.female_target_ids[line_ind]
+                dialog_num = mp.female_dialog_nums[line_ind]
+                is_female = False
+                if source_id in mp.female_list:
+                    is_female = True
+                drawEllipseInGraphics(pg,source_x,source_y,mp.id2size(source_id),opa=img_ind,is_female=is_female)
+                
+                # target may contain multiple person
+                for tar_ind in range(len(target_points)):
+                    target_x = target_points[tar_ind][0]
+                    target_y = target_points[tar_ind][1]
+                    target_id = target_ids[tar_ind]
+                    is_female = False
+                    if target_id in mp.female_list:
+                        is_female = True
+                    drawEllipseInGraphics(pg,target_x,target_y,mp.id2size(target_id),opa=img_ind,is_female=is_female)
+                    
+                    # draw lines
+                    linewidth = ceil(dialog_num/4.0) # propotional to dialog nums in each episode
+                    strokeWeight(linewidth)
+                    pg.stroke(255, 79, 89, 65)
+                    pg.line(source_x, source_y, target_x, target_y)
+                        
         pg.filter(BLUR,1.0)
-        
-        with open('hero.csv', 'r') as infile:
-            data = infile.readlines()
-        # pg.stroke(0, 150, 255, 75)
-        pg.noStroke()
-        
-        for ind,dt in enumerate(data):
-            item = dt.split(',')
-            b_time = str2time(item[2])
-            e_time = str2time(item[3])
-            l_time = e_time
+        for line_ind in range(mp.LINE_NUM):
+            # draw lines
+            source_x, source_y = mp.source_points[line_ind]
+            target_points = mp.target_points[line_ind]
+            source_id = mp.source_ids[line_ind]
+            target_ids = mp.target_ids[line_ind]
+            dialog_num = mp.dialog_nums[line_ind]
+            is_female = False
+            if source_id in mp.female_list:
+                is_female = True
+            drawEllipseInGraphics(pg,source_x,source_y,mp.id2size(source_id),5,opa=img_ind,is_female=is_female)
             
-            source = p2id[item[4]]
-            source_pos = cp.getCoordinates(item[2], source)
-            drawEllipseInGraphics(pg,source_pos[0],source_pos[1],source,5,opa=img_ind)
-            
-            # multiple targets
-            if '+' in item[5]: 
-                targets = item[5].split('+')
-                tgs = [p2id[t] for t in targets]
-                for tg in tgs:
-                    tg_pos = cp.getCoordinates(item[3], tg)
-                    drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,5,opa=img_ind)
-            else:
-                tg = p2id[item[5]]
-                tg_pos = cp.getCoordinates(item[3], tg)
-                drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,5,opa=img_ind)
+            # target may contain multiple person
+            for tar_ind in range(len(target_points)):
+                target_x = target_points[tar_ind][0]
+                target_y = target_points[tar_ind][1]
+                target_id = target_ids[tar_ind]
+                is_female = False
+                if target_id in mp.female_list:
+                    is_female = True
+                drawEllipseInGraphics(pg,target_x,target_y,mp.id2size(target_id),5,opa=img_ind,is_female=is_female)
                 
-        with open('hero_female.csv', 'r') as infile:
-            data = infile.readlines()
-        # pg.stroke(255, 79, 89, 65)  # red
-        pg.noStroke()
-        for ind,dt in enumerate(data):
-            item = dt.split(',')
-            b_time = str2time(item[2])
-            e_time = str2time(item[3])
-            l_time = e_time
-            
-            source = p2id[item[4]]
-            source_pos = cp.getCoordinates(item[2], source)
-            drawEllipseInGraphics(pg,source_pos[0],source_pos[1],source,5,ellipse_color='red',opa=img_ind)
-    
-            if '+' in item[5]:
-                targets = item[5].split('+')
-                tgs = [p2id[t] for t in targets]
-                for tg in tgs:
-                    tg_pos = cp.getCoordinates(item[3], tg)
-                    drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,5,ellipse_color='red',opa=img_ind)
-            else:
-                tg = p2id[item[5]]
-                tg_pos = cp.getCoordinates(item[3], tg)
-                drawEllipseInGraphics(pg,tg_pos[0], tg_pos[1],tg,5,ellipse_color='red',opa=img_ind)
+        # female dialogs
+        if not draw_color_line:
+            for line_ind in range(mp.FEMALE_LINE_NUM):
+                # draw lines
+                source_x, source_y = mp.female_source_points[line_ind]
+                target_points = mp.female_target_points[line_ind]
+                source_id = mp.female_source_ids[line_ind]
+                target_ids = mp.female_target_ids[line_ind]
+                dialog_num = mp.female_dialog_nums[line_ind]
+                is_female = False
+                if source_id in mp.female_list:
+                    is_female = True
+                drawEllipseInGraphics(pg,source_x,source_y,mp.id2size(source_id),5,opa=img_ind,is_female=is_female)
+                
+                # target may contain multiple person
+                for tar_ind in range(len(target_points)):
+                    target_x = target_points[tar_ind][0]
+                    target_y = target_points[tar_ind][1]
+                    target_id = target_ids[tar_ind]
+                    is_female = False
+                    if target_id in mp.female_list:
+                        is_female = True
+                    drawEllipseInGraphics(pg,target_x,target_y,mp.id2size(target_id),5,opa=img_ind,is_female=is_female)
+        
         pg.endDraw()
         cir.append(pg.get())
     
     for img_ind in reversed(range(15)):
         cir.append(cir[img_ind])
-
-    # with open('hero.csv', 'r') as infile:
-    #     data = infile.readlines()
-    # for dt in data:
-    #     bs.append(Branch()) # initialize branches
-
 
 def draw():
 
@@ -147,176 +157,45 @@ def draw():
     # if frameCount==0:
 
     image(cir[frameCount%30],0,0)
-
-    all_line = list()
-    l_time = 0
-    with open('hero.csv', 'r') as infile:
-        data = infile.readlines()
-    total_time = data[-1].split(',')[3]
-    print len(p2id)
-
-    cp = sectorPlate(canvas_size=(height, width), total_time=total_time, person_nums=len(p2id))
-    stroke(0, 150, 255, 75) # blue, opacity=75%
     randomSeed(0)
-     
-    # draw male dialogs
-    for ind,dt in enumerate(data):
-        item = dt.split(',')
-        b_time = str2time(item[2])
-        e_time = str2time(item[3])
-        l_time = e_time
-        
-        source = p2id[item[4]]
-        source_pos = cp.getCoordinates(item[2], source)
-        linewidth = ceil(int(item[1])/4.0) # propotional to dialog nums in each episode
-        # multiple targets
-        if '+' in item[5]: 
-            targets = item[5].split('+')
-            tgs = [p2id[t] for t in targets]
-            for tg in tgs:
-                tg_pos = cp.getCoordinates(item[3], tg)
-                strokeWeight(linewidth)
-                line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
-                stroke(0, 150, 255, 95)
-                ang = cp.getCurrentAngle(item[3]) # branches' directions
-                ang = radians(ang)
-                strokeWeight(1)
-                idx = len(all_line) # record all lines for interaction
-                all_line.append([source_pos, tg_pos, idx])
-        else:
-            tg = p2id[item[5]]
-            tg_pos = cp.getCoordinates(item[3], tg)
-            strokeWeight(linewidth)
-            line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
-            stroke(0, 150, 255, 95)
-            strokeWeight(1)
-            ang = cp.getCurrentAngle(item[3])
-            ang = radians(ang)
-            idx = len(all_line) # record all lines for interaction
-            all_line.append([source_pos, tg_pos, idx])
-        
-        # draw branches
+    
+    # draw branches
+    for line_ind in range(mp.LINE_NUM):
+        branch_x, branch_y = mp.branch_points[line_ind]
+        ang = mp.branch_angs[line_ind]
+        dialog_num = mp.dialog_nums[line_ind]
+        linewidth = ceil(dialog_num/4.0)
         pushMatrix()
-        if tg_pos[1] > source_pos[1]:
-            translate(source_pos[0], source_pos[1])
-        else:
-            translate(tg_pos[0], tg_pos[1])
+        translate(branch_x, branch_y)
         rotate(ang)    
-        bs[ind].branch(linewidth=linewidth,freq=random(0,1),h=int(item[1])*6 ,r=2)
+        bs[line_ind].branch(linewidth=linewidth,freq=random(0,1)*freq_size,h=dialog_num*h_size)
         popMatrix()
         strokeWeight(1)
         
-    # draw female dialogs
-    with open('hero_female.csv', 'r') as infile:
-        data = infile.readlines()
-    stroke(255, 79, 89, 65)  # red
-    for ind,dt in enumerate(data):
-        item = dt.split(',')
-        b_time = str2time(item[2])
-        e_time = str2time(item[3])
-        l_time = e_time
-        
-        source = p2id[item[4]]
-        source_pos = cp.getCoordinates(item[2], source)
-        linewidth = round(int(item[1])/4.0)
-        if '+' in item[5]:
-            targets = item[5].split('+')
-            tgs = [p2id[t] for t in targets]
-            for tg in tgs:
-                tg_pos = cp.getCoordinates(item[3], tg)
-                strokeWeight(linewidth)
-                line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
-                ang = cp.getCurrentAngle(item[3])
-                ang = radians(ang)
-                strokeWeight(1)
-                idx = len(all_line)
-                all_line.append([source_pos, tg_pos, idx])
-        else:
-            tg = p2id[item[5]]
-            tg_pos = cp.getCoordinates(item[3], tg)
-            strokeWeight(linewidth)
-            line(source_pos[0], source_pos[1], tg_pos[0], tg_pos[1])
-            strokeWeight(1)
-            ang = cp.getCurrentAngle(item[3])
-            ang = radians(ang)
-            idx = len(all_line)
-            all_line.append([source_pos, tg_pos, idx])
-        
-        
-        
     # draw sector background
     noFill()
-    cp.drawSector()
+    mp.drawSector()
     fill(255)
     # saveFrame("frames/tree-######.png")
-    
-def drawEllipseByID(x,y,id,ellipse_width=3.5):
-    # noStroke()
-    # fill(255, 130)
-    strokeWeight(0)
-    if id == 3: # qc
-        ellipse(x, y,ellipse_width*2, ellipse_width*2) # 2*3
-    elif id == 16: # jd
-        fill(255)
-        ellipse(x, y, ellipse_width*3, ellipse_width*3)
-        fill(0, 175, 248, 65)
-        ellipse(x, y, ellipse_width*3, ellipse_width*3)#2*6
-        fill(255)
-    elif id == 17: # ssm
-        ellipse(x, y, ellipse_width*1.6,ellipse_width*1.6)
-    elif id == 7: # xtj
-        ellipse(x, y, ellipse_width*1.2,ellipse_width*1.2)
-    elif id == 0:
-        fill(255)
-        ellipse(x, y,ellipse_width,ellipse_width)
-        fill(0, 175, 248, 65)
-        ellipse(x, y, ellipse_width, ellipse_width)
-        fill(255)
-    else:   
-        ellipse(x, y,ellipse_width,ellipse_width)
-    strokeWeight(1)
 
-def drawEllipseInGraphics(pg,x,y,id,ellipse_width=8,ellipse_color='blue',opa=0.5):
-    # noStroke()
-    # fill(255, 130)
+def drawEllipseInGraphics(pg,x,y,ellipse_size=1,ellipse_width=8,opa=0.5,is_female=False):
     pg.strokeWeight(0)
-    if id not in female_list:
+    if not is_female:
         c = color(0,150,255,10*opa)
     else:
         c = color(255,79,89,10*opa)
-
-    if id == 3: # qc
-        pg.fill(c)
-        pg.ellipse(x, y,ellipse_width*2, ellipse_width*2) # 2*3
-        # pg.fill(bright)
-    elif id == 16: # jd
-        pg.fill(c)
-        pg.ellipse(x, y, ellipse_width*2.2, ellipse_width*2.2)#2*6
-        # pg.fill(bright)
-    elif id == 17: # ssm
-        pg.fill(c)
-        pg.ellipse(x, y, ellipse_width*1.6,ellipse_width*1.6)
-        # pg.fill(bright)
-    elif id == 7: # xtj
-        pg.fill(c)
-        pg.ellipse(x, y, ellipse_width*1.2,ellipse_width*1.2)
-        # pg.fill(bright)
-    elif id == 0:
-        pg.fill(c)
-        pg.ellipse(x, y, ellipse_width, ellipse_width)
-        # pg.fill(bright)
-    else:   
-        pg.fill(c)
-        pg.ellipse(x, y,ellipse_width,ellipse_width)
-        # pg.fill(255)
+    pg.fill(c)
+    pg.ellipse(x, y,ellipse_width*ellipse_size, ellipse_width*ellipse_size) # 2*3
     pg.strokeWeight(1)
 
+def drawColorLine():
+    pass
+    
 class Branch(object):
     def __init__(self):
         self.num = 0
 
-        
-    def branch(self,linewidth,freq=None,h=40, r=4):
+    def branch(self,linewidth,freq=None,h=40):
         """
         h: tree height
         r: round number
@@ -333,7 +212,7 @@ class Branch(object):
             line(0, 0, 0, -h)
             ellipse(0, -h, 1, 1)
             translate(0, -h)
-            self.branch(linewidth,freq,h,r-1)
+            self.branch(linewidth,freq,h)
             popMatrix()
             
             pushMatrix()
@@ -342,19 +221,10 @@ class Branch(object):
             line(0, 0, 0, -h)
             ellipse(0, -h, 1, 1)
             translate(0, -h)
-            self.branch(linewidth,freq,h, r-1)
+            self.branch(linewidth,freq,h)
             popMatrix()
         else:
             fill(255)
             ellipse(0, 0, 1, 1) # end point always white
             fill(255)
         self.num = self.num + 0.008
-
-
-def str2time(timestring):
-    assert type(timestring) == str
-    h = int(timestring[:2])
-    m = int(timestring[2:4])
-    s = int(timestring[4:])
-    time = s + m * 60 + h * 3600
-    return time
