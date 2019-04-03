@@ -8,12 +8,12 @@ bs = [] # each episode is a branch, this is a global variable.
 cir = []
 
 # Hero
-#  h_size = 6
-# freq_size = 1
+h_size = 6
+freq_size = 1
 
 # Lovers
-h_size = 3
-freq_size = 0.2
+# h_size = 3
+# freq_size = 0.2
 
 def setup():
     size(800, 800)
@@ -21,13 +21,15 @@ def setup():
     background(0)
     global cir
     global mp
-    draw_color_line = False
+    draw_color_line = True
     
     # Hero
     # mp = movieProfile(file_dir='hero/hero.csv',female_file_dir='hero/hero_female.csv',female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
+
+    mp = movieProfile(file_dir='hero/hero.csv',color_file_dir='hero/hero_color.txt',female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
     
     # Lovers
-    mp = movieProfile(file_dir='Lovers/movie.csv',female_file_dir='Lovers/movie_female.csv',female_names=['jn','am','xm','nx','dj'],character_size={'nx':1.2,'jn':1.5})
+    # mp = movieProfile(file_dir='Lovers/movie.csv',female_file_dir='Lovers/movie_female.csv',female_names=['jn','am','xm','nx','dj'],character_size={'nx':1.2,'jn':1.5})
 
     for _ in range(mp.LINE_NUM):
         bs.append(Branch()) # initialize branches
@@ -44,6 +46,7 @@ def setup():
             source_id = mp.source_ids[line_ind]
             target_ids = mp.target_ids[line_ind]
             dialog_num = mp.dialog_nums[line_ind]
+            
             is_female = False
             if source_id in mp.female_list:
                 is_female = True
@@ -54,6 +57,7 @@ def setup():
                 target_x = target_points[tar_ind][0]
                 target_y = target_points[tar_ind][1]
                 target_id = target_ids[tar_ind]
+                
                 is_female = False
                 if target_id in mp.female_list:
                     is_female = True
@@ -62,11 +66,9 @@ def setup():
                 # draw lines
                 linewidth = ceil(dialog_num/4.0) # propotional to dialog nums in each episode
                 strokeWeight(linewidth)
-                pg.stroke(0, 150, 255, 95)
                 if not draw_color_line:
+                    pg.stroke(0, 150, 255, 95)
                     pg.line(source_x, source_y, target_x, target_y)
-                else:
-                    drawColorLine()
                 
         # female dialogs
         if not draw_color_line:
@@ -106,6 +108,10 @@ def setup():
             source_id = mp.source_ids[line_ind]
             target_ids = mp.target_ids[line_ind]
             dialog_num = mp.dialog_nums[line_ind]
+            if draw_color_line:
+                points_list = mp.points_list[line_ind] # 1 or 2 elements
+                colors = mp.colors[line_ind] 
+            
             is_female = False
             if source_id in mp.female_list:
                 is_female = True
@@ -121,6 +127,9 @@ def setup():
                     is_female = True
                 drawEllipseInGraphics(pg,target_x,target_y,mp.id2size(target_id),5,opa=img_ind,is_female=is_female)
                 
+            linewidth = ceil(dialog_num/4.0) # propotional to dialog nums in each episode
+            if draw_color_line:
+                drawColorLine(pg,points_list,colors,linewidth)
         # female dialogs
         if not draw_color_line:
             for line_ind in range(mp.FEMALE_LINE_NUM):
@@ -188,8 +197,17 @@ def drawEllipseInGraphics(pg,x,y,ellipse_size=1,ellipse_width=8,opa=0.5,is_femal
     pg.ellipse(x, y,ellipse_width*ellipse_size, ellipse_width*ellipse_size) # 2*3
     pg.strokeWeight(1)
 
-def drawColorLine():
-    pass
+def drawColorLine(pg,points,colors,linewidth):
+    for line_ind in range(len(colors)):
+        seg_color = colors[line_ind]
+        r,g,b = seg_color
+        for seg_point in points:
+            source_x,source_y,target_x,target_y = seg_point[line_ind]
+            pg.stroke(r, g, b)
+            pg.strokeWeight(linewidth)
+            pg.line(source_x, source_y, target_x, target_y)
+            # pg.stroke(r, g, b)
+
     
 class Branch(object):
     def __init__(self):

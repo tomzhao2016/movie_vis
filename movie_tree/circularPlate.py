@@ -134,6 +134,35 @@ class sectorPlate(object):
         x = current_radius*math.cos(polar_angle/180*math.pi)
         return x+self.center_x, self.center_y - y
 
+    def getCoordinatesByProportion(self,timestamps,proportions,person_id):
+        """
+        Find x,y in polar coordinates.
+        Inputs:
+            timestamps: List of string, e.g. ['001125','001225'] is [start_time,end_time].
+            proportions: List of proportion.
+            person_id: List of person_id, [[source_id,target_id_1],[source_id,target_id_2]].
+        Output: tuple of floats. (x,y)
+        convert time string into seconds.
+        """
+        coord_lists = []
+        start_time,end_time = timestamps
+
+        for ids in person_id:
+            coord_list = []
+            source_id,target_id = ids
+            source_x, source_y = self.getCoordinates(start_time, source_id)
+            target_x, target_y = self.getCoordinates(end_time, target_id)
+            start_x = source_x
+            start_y = source_y
+            for prop_ind,prop in enumerate(proportions):
+                end_x = source_x+(target_x-source_x)*prop
+                end_y = source_y+(target_y-source_y)*prop
+                coord_list.append([start_x,start_y,end_x,end_y])
+                start_x = end_x
+                start_y = end_y
+            coord_lists.append(coord_list)
+        return coord_lists
+
     def getCurrentAngle(self,timestamp):
         timestamp = self.str2sec(timestamp)
         return self.start_angle + self.angle_scale*timestamp

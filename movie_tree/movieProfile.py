@@ -10,7 +10,7 @@ class movieProfile(object):
     """
     Details on the movie object.
     """
-    def __init__(self,file_dir,female_file_dir=None,female_names=None,character_size=None):
+    def __init__(self,file_dir,color_file_dir=None,female_file_dir=None,female_names=None,character_size=None):
         """
         Inputs:
             file_dir: String of file dir. Example, 'movie.csv'.
@@ -30,6 +30,7 @@ class movieProfile(object):
         self.file_dir = file_dir
         self.female_file_dir = female_file_dir
         self.female_names = female_names
+        self.color_file_dir = color_file_dir
 
         with open(self.file_dir, 'r') as infile:
             self.data = infile.readlines()
@@ -37,21 +38,28 @@ class movieProfile(object):
         self.total_time = self.data[-1].split(',')[3]
         self.plate = sectorPlate(canvas_size=(height, width), total_time=self.total_time, person_nums=18)
 
-        with open(self.female_file_dir, 'r') as female_infile:
-            self.female_data = female_infile.readlines()
-        self.FEMALE_LINE_NUM = len(self.female_data)
+        if self.female_file_dir:
+            with open(self.female_file_dir, 'r') as female_infile:
+                self.female_data = female_infile.readlines()
+            self.FEMALE_LINE_NUM = len(self.female_data)
 
-        self.set_constants()
+        if self.color_file_dir:
+            with open(self.color_file_dir, 'r') as color_infile:
+                self.color_data = color_infile.readlines()
+
+        self.setConstants()
         self.CHARACTER_NUM = len(self.person_id)
 
         self.female_list = self.set_female_list
-        self.character_size = self.convert_character_size(character_size)
+        self.character_size = self.convertCharacterSize(character_size)
 
-        self.build_file()
+        self.buildFile()
         if self.female_file_dir:
-            self.build_female_file()
+            self.buildFemaleFile()
+        if self.color_file_dir:
+            self.buildColorFile()
 
-    def set_constants(self):
+    def setConstants(self):
         appear_time_dict = {}
         person_id_dict = {}
         count = 0
@@ -60,7 +68,6 @@ class movieProfile(object):
             source_name = line[4]
             target_names = line[5].split('+')
             start_time = line[2]
-            end_time = line[3]
             if source_name not in appear_time_dict.keys():
                 appear_time_dict[source_name] = start_time
                 person_id_dict[source_name] = count
@@ -75,12 +82,14 @@ class movieProfile(object):
 
     @property
     def set_female_list(self):
+
         female_list = []
         for female_name in self.female_names:
             female_list.append(self.person_id[female_name])
         return female_list
 
-    def convert_character_size(self,character_size):
+    def convertCharacterSize(self,character_size):
+
         new_character_size = {}
         for key_name in character_size.keys():
             new_character_size[self.person_id[key_name]] = character_size[key_name]
@@ -89,7 +98,8 @@ class movieProfile(object):
                 new_character_size[ind] = 1.0
         return new_character_size
 
-    def build_file(self):
+    def buildFile(self):
+
         self.source_points = []
         self.target_points = []
         self.source_ids = []
@@ -133,7 +143,7 @@ class movieProfile(object):
             self.source_ids.append(source_id)
             self.target_ids.append(target_ids)
 
-    def build_female_file(self):
+    def buildFemaleFile(self):
 
         self.female_source_points = []
         self.female_target_points = []
@@ -167,6 +177,58 @@ class movieProfile(object):
             self.female_target_points.append(target_points)
             self.female_source_ids.append(source_id)
             self.female_target_ids.append(target_ids)
+
+    def buildColorFile(self):
+
+        self.palette_lists = []
+        self.proportion_lists = []
+        for line in self.color_data:
+            line = line.split(' ')
+            color_list = []
+            proportion_list = []
+            for color_proportion in line[1:len(line)-1]:
+                color_proportion = color_proportion.split(',')
+                color_r = int(color_proportion[0])
+                color_g = int(color_proportion[1])
+                color_b = int(color_proportion[2])
+                color_p = float(color_proportion[3])
+                color_list.append([color_r,color_g,color_b])
+                proportion_list.append(color_p)
+            # make accumulated
+            for prop_ind in range(len(proportion_list)):
+                if prop_ind == 0:
+                    continue
+                proportion_list[prop_ind] = proportion_list[prop_ind] + proportion_list[prop_ind-1]
+            proportion_list[-1] = 1
+            self.palette_lists.append(color_list)
+            self.proportion_lists.append(proportion_list)
+
+        self.colors = []
+        self.proportions = []
+        for line in self.data:
+            line = line.split(',')
+            start_time = line[2]
+            end_time = line[3]
+            start_sec = self.plate.str2sec(start_time)
+            end_sec = self.plate.str2sec(end_time)
+            colors = self.palette_lists[int((start_sec+end_sec)/2)]
+            proportions = self.proportion_lists[int((start_sec+end_sec)/2)]
+
+            self.colors.append(colors)
+            self.proportions.append(proportions)
+
+        # points_list use proportion_lists
+        self.points_list = []
+        for line_ind, line in enumerate(self.data):
+            line = line.split(',')
+            person_ids = []
+            start_time = line[2]
+            end_time = line[3]
+            source_id = self.source_ids[line_ind]
+            for target_id in self.target_ids[line_ind]:
+                person_ids.append([source_id,target_id])
+            points = self.plate.getCoordinatesByProportion([start_time,end_time],self.proportions[line_ind],person_ids)
+            self.points_list.append(points)
 
 
     def id2size(self,id):
