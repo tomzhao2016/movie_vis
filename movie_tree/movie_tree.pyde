@@ -5,8 +5,15 @@ import math
 from datetime import datetime
 
 bs = [] # each episode is a branch, this is a global variable.
+ms =[]
 cir = []
 background_color = 0
+
+draw_plain_line = False
+draw_color_line = False
+draw_color_sector = False
+draw_branches = False
+draw_motions = True
 # Hero
 h_size = 6
 freq_size = 1
@@ -22,10 +29,7 @@ def setup():
     background(background_color)
     global cir
     global mp
-     
-    draw_plain_line = False
-    draw_color_line = False
-    draw_color_sector = True
+    global ms
     
     # Hero female
     # mp = movieProfile(file_dir='hero/hero.csv',female_file_dir='hero/hero_female.csv',female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
@@ -36,14 +40,17 @@ def setup():
     # mp = movieProfile(file_dir='Lovers/movie.csv',female_file_dir='Lovers/movie_female.csv',female_names=['jn','am','xm','nx','dj'],character_size={'nx':1.2,'jn':1.5})
     # Lovers color
     # mp = movieProfile(file_dir='Lovers/movie.csv',color_file_dir='Lovers/lovers_color.txt',female_names=['jn','am','xm','nx','dj'],character_size={'nx':1.2,'jn':1.5})
-
-    for _ in range(mp.LINE_NUM):
-        bs.append(Branch()) # initialize branches
+    if draw_motions:
+        for line_ind in range(mp.LINE_NUM):
+            ms.append(motionSector(mp,line_ind)) # initialize motionSector
+    if draw_branches:
+        for _ in range(mp.LINE_NUM):
+            bs.append(Branch()) # initialize branches
     
     for img_ind in range(5,20):
         pg = createGraphics(800,800)
         pg.beginDraw()
-        pg.background(background_color)
+        pg.background(0,0,0,0)
         pg.colorMode(RGB)
         # all dialogs
         for line_ind in range(mp.LINE_NUM):
@@ -147,6 +154,7 @@ def setup():
                 drawColorLine(pg,points_list,colors,linewidth)
             if draw_color_sector:
                 drawColorSector(pg,points_sector,colors_sector)
+                
         # female dialogs
         if draw_plain_line:
             for line_ind in range(mp.FEMALE_LINE_NUM):
@@ -180,31 +188,34 @@ def setup():
 def draw():
 
     background(background_color)
-
+    # draw sectors
+    for line_ind in range(mp.LINE_NUM):
+        image(ms[line_ind].gp[frameCount%ms[line_ind].duration],0,0)
     image(cir[frameCount%30],0,0)
-    randomSeed(0)
     
     # draw branches
+    if draw_branches:
+        randomSeed(0)
+        for line_ind in range(mp.LINE_NUM):
+            
+            if not mp.colors_sector[line_ind]:
+                continue
+            r,g,b = mp.colors_sector[line_ind][-1][-1]
+            stroke(r,g,b,50)
+            branch_x, branch_y = mp.branch_points[line_ind]
+            ang = mp.branch_angs[line_ind]
+            dialog_num = mp.dialog_nums[line_ind]
+            linewidth = ceil(dialog_num/4.0)
+            pushMatrix()
+            translate(branch_x, branch_y)
+            rotate(ang)  
+            if freq_file:  
+                bs[line_ind].branch(linewidth=linewidth,freq=mp.freqs[line_ind]*freq_size,h=dialog_num*h_size)
+            else:
+                bs[line_ind].branch(linewidth=linewidth,freq=random(0,1)*freq_size,h=dialog_num*h_size)
     
-    for line_ind in range(mp.LINE_NUM):
-        if not mp.colors_sector[line_ind]:
-            continue
-        r,g,b = mp.colors_sector[line_ind][-1][-1]
-        stroke(r,g,b,50)
-        branch_x, branch_y = mp.branch_points[line_ind]
-        ang = mp.branch_angs[line_ind]
-        dialog_num = mp.dialog_nums[line_ind]
-        linewidth = ceil(dialog_num/4.0)
-        pushMatrix()
-        translate(branch_x, branch_y)
-        rotate(ang)  
-        if freq_file:  
-            bs[line_ind].branch(linewidth=linewidth,freq=mp.freqs[line_ind]*freq_size,h=dialog_num*h_size)
-        else:
-            bs[line_ind].branch(linewidth=linewidth,freq=random(0,1)*freq_size,h=dialog_num*h_size)
-
-        popMatrix()
-        strokeWeight(1)
+            popMatrix()
+            strokeWeight(1)
         
     # draw sector background
     noFill()
@@ -247,11 +258,70 @@ def drawColorSector(pg,points,colors,linewidth=1):
             pg.fill(r,g,b)
             pg.strokeWeight(linewidth)
             pg.line(source_x, source_y, target_x, target_y)
-            
-            
-    
 
+class motionSector(object):
+    def __init__(self,movie_profile,sector_ind):
+        self.mp = movie_profile
+        self.sid = sector_ind
+        
+        self.freq = self.mp.freqs[self.sid]
+
+        self.duration = self.freq2dur()
+        self.amplitude = self.freq2amp()
+        
+        self.gp = []
+        self.buildGP()
     
+    def buildGP(self):
+        
+        for ind_gp in range(self.duration):
+            gp = createGraphics(800,800)
+            gp.beginDraw()
+            gp.background(0,0,0,0)
+            points_sector = mp.points_sector[self.sid]
+            colors_sector = mp.colors_sector[self.sid]
+            cur_radians = math.pi*2*float(ind_gp)/float(self.duration)
+            
+            data_line = mp.data[self.sid]
+            data_line = data_line.split(',')
+            start_time = data_line[2]
+            end_time = data_line[3]
+            start_sec = mp.plate.str2sec(start_time)
+            end_sec = mp.plate.str2sec(end_time)
+            source_id = mp.source_ids[self.sid]
+            target_id = mp.target_ids[self.sid][-1]
+            if source_id > target_id:
+                temp_id = source_id
+                source_id = target_id
+                target_id = temp_id
+            seg_points = []
+            seg_colors = []
+            for time_sec in range(start_sec,end_sec):
+                colors = mp.palette_lists[time_sec]
+                proportions = mp.proportion_lists[time_sec]
+                time_str = mp.sec2str(time_sec)
+                points = mp.plate.getCoordinatesByProportion([time_str, time_str], proportions, [[source_id,target_id]],self.amplitude,cur_radians)
+                points = points[0]
+                seg_points.append(points)
+                seg_colors.append(colors)
+
+            drawColorSector(gp,seg_points,seg_colors,linewidth=1)
+            gp.endDraw()
+            self.gp.append(gp)
+        
+        
+    def freq2dur(self):
+        self.max_duration = 3 # slowest
+        self.min_duration = 3 # fastest
+        # freq = 1: 10 frames for one period
+        # freq = 0: 50 frmaes for one period
+        return int(self.max_duration - self.freq*(self.max_duration-self.min_duration))
+        
+    def freq2amp(self):
+        return self.mp.plate.radius_scale
+         
+        
+        
 class Branch(object):
     def __init__(self):
         self.num = 0

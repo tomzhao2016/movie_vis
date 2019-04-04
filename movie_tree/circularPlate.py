@@ -134,7 +134,28 @@ class sectorPlate(object):
         x = current_radius*math.cos(polar_angle/180*math.pi)
         return x+self.center_x, self.center_y - y
 
-    def getCoordinatesByProportion(self,timestamps,proportions,person_id):
+    def getCoordinatesMotion(self,timestamp,person_id,amp,cur_theta):
+        """
+        Find x,y in polar coordinates.
+        Inputs:
+            timestamp: string, e.g. '001125' is 00:11:25.
+            person_id: the id of the circular.
+            amp: float
+            cur_theta: radians of current pos.
+        Output: tuple of floats. (x,y)
+        convert time string into seconds.
+        """
+        timestamp = self.str2sec(timestamp)
+        current_angle = self.start_angle + self.angle_scale*timestamp
+        polar_angle = 90-current_angle
+        current_radius = (person_id+1+3)*self.radius_scale
+
+        current_radius = current_radius+amp*math.sin(cur_theta)
+        y = current_radius*math.sin(polar_angle/180*math.pi)
+        x = current_radius*math.cos(polar_angle/180*math.pi)
+        return x+self.center_x, self.center_y - y
+
+    def getCoordinatesByProportion(self,timestamps,proportions,person_id,amp=0,cur_theta=0):
         """
         Find x,y in polar coordinates.
         Inputs:
@@ -150,8 +171,8 @@ class sectorPlate(object):
         for ids in person_id:
             coord_list = []
             source_id,target_id = ids
-            source_x, source_y = self.getCoordinates(start_time, source_id)
-            target_x, target_y = self.getCoordinates(end_time, target_id)
+            source_x, source_y = self.getCoordinatesMotion(start_time, source_id,amp,cur_theta)
+            target_x, target_y = self.getCoordinatesMotion(end_time, target_id,amp,cur_theta)
             start_x = source_x
             start_y = source_y
             for prop_ind,prop in enumerate(proportions):
