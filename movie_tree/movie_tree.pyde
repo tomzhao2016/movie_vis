@@ -10,6 +10,7 @@ background_color = 0
 # Hero
 h_size = 6
 freq_size = 1
+freq_file = 'hero/hero_freq.txt'
 
 # Lovers
 # h_size = 3
@@ -29,7 +30,7 @@ def setup():
     # Hero female
     # mp = movieProfile(file_dir='hero/hero.csv',female_file_dir='hero/hero_female.csv',female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
     # Hero Color
-    mp = movieProfile(file_dir='hero/hero.csv',color_file_dir='hero/hero_color.txt',female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
+    mp = movieProfile(file_dir='hero/hero.csv',color_file_dir='hero/hero_color.txt',freq_file_dir = freq_file,female_names=['ry','fx'],character_size={'qc':2,'jd':2.2,'ssm':1.6,'xtj':1.2})
     
     # Lovers female
     # mp = movieProfile(file_dir='Lovers/movie.csv',female_file_dir='Lovers/movie_female.csv',female_names=['jn','am','xm','nx','dj'],character_size={'nx':1.2,'jn':1.5})
@@ -196,8 +197,12 @@ def draw():
         linewidth = ceil(dialog_num/4.0)
         pushMatrix()
         translate(branch_x, branch_y)
-        rotate(ang)    
-        # bs[line_ind].branch(linewidth=linewidth,freq=random(0,1)*freq_size,h=dialog_num*h_size)
+        rotate(ang)  
+        if freq_file:  
+            bs[line_ind].branch(linewidth=linewidth,freq=mp.freqs[line_ind]*freq_size,h=dialog_num*h_size)
+        else:
+            bs[line_ind].branch(linewidth=linewidth,freq=random(0,1)*freq_size,h=dialog_num*h_size)
+
         popMatrix()
         strokeWeight(1)
         

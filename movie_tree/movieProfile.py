@@ -10,7 +10,7 @@ class movieProfile(object):
     """
     Details on the movie object.
     """
-    def __init__(self,file_dir,color_file_dir=None,female_file_dir=None,female_names=None,character_size=None):
+    def __init__(self,file_dir,color_file_dir=None,female_file_dir=None,freq_file_dir=None, female_names=None,character_size=None):
         """
         Inputs:
             file_dir: String of file dir. Example, 'movie.csv'.
@@ -31,6 +31,7 @@ class movieProfile(object):
         self.female_file_dir = female_file_dir
         self.female_names = female_names
         self.color_file_dir = color_file_dir
+        self.freq_file_dir = freq_file_dir
 
         with open(self.file_dir, 'r') as infile:
             self.data = infile.readlines()
@@ -46,6 +47,12 @@ class movieProfile(object):
         if self.color_file_dir:
             with open(self.color_file_dir, 'r') as color_infile:
                 self.color_data = color_infile.readlines()
+
+        if self.freq_file_dir:
+            with open(self.freq_file_dir, 'r') as freq_infile:
+                self.freq_data = freq_infile.readlines()
+            self.buildFreqFile()
+
 
         self.setConstants()
         self.CHARACTER_NUM = len(self.person_id)
@@ -282,6 +289,11 @@ class movieProfile(object):
                 seg_colors.append(colors)
             self.points_sector.append(seg_points)
             self.colors_sector.append(seg_colors)
+
+    def buildFreqFile(self):
+        self.freqs=[]
+        for freq in self.freq_data:
+            self.freqs.append(int(freq.split(',')[0])/10.0)
 
     def sec2str(self,time_sec):
         time_hour = int(time_sec / 3600)
