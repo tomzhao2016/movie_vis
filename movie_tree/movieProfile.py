@@ -57,7 +57,8 @@ class movieProfile(object):
         if self.female_file_dir:
             self.buildFemaleFile()
         if self.color_file_dir:
-            self.buildColorFile()
+            # self.buildColorFile()
+            self.buildColorSectorFile()
 
     def setConstants(self):
         appear_time_dict = {}
@@ -230,6 +231,76 @@ class movieProfile(object):
             points = self.plate.getCoordinatesByProportion([start_time,end_time],self.proportions[line_ind],person_ids)
             self.points_list.append(points)
 
+    def buildColorSectorFile(self):
+
+        self.palette_lists = []
+        self.proportion_lists = []
+        for line in self.color_data:
+            line = line.split(' ')
+            color_list = []
+            proportion_list = []
+            for color_proportion in line[1:len(line) - 1]:
+                color_proportion = color_proportion.split(',')
+                color_r = int(color_proportion[0])
+                color_g = int(color_proportion[1])
+                color_b = int(color_proportion[2])
+                color_p = float(color_proportion[3])
+                color_list.append([color_r, color_g, color_b])
+                proportion_list.append(color_p)
+            # make accumulated
+            for prop_ind in range(len(proportion_list)):
+                if prop_ind == 0:
+                    continue
+                proportion_list[prop_ind] = proportion_list[prop_ind] + proportion_list[prop_ind - 1]
+            proportion_list[-1] = 1
+            self.palette_lists.append(color_list)
+            self.proportion_lists.append(proportion_list)
+
+        self.points_sector = []
+        self.colors_sector = []
+        for line_ind, line in enumerate(self.data):
+            line = line.split(',')
+            start_time = line[2]
+            end_time = line[3]
+            start_sec = self.plate.str2sec(start_time)
+            end_sec = self.plate.str2sec(end_time)
+            source_id = self.source_ids[line_ind]
+            target_id = self.target_ids[line_ind][-1]
+            if source_id > target_id:
+                temp_id = source_id
+                source_id = target_id
+                target_id = temp_id
+            seg_points = []
+            seg_colors = []
+            for time_sec in range(start_sec,end_sec):
+                colors = self.palette_lists[time_sec]
+                proportions = self.proportion_lists[time_sec]
+                time_str = self.sec2str(time_sec)
+                points = self.plate.getCoordinatesByProportion([time_str, time_str], proportions, [[source_id,target_id]])
+                points = points[0]
+                seg_points.append(points)
+                seg_colors.append(colors)
+            self.points_sector.append(seg_points)
+            self.colors_sector.append(seg_colors)
+
+    def sec2str(self,time_sec):
+        time_hour = int(time_sec / 3600)
+        time_min = int((time_sec % 3600) / 60)
+        time_sec = int((time_sec % 60))
+        time_str = ''
+        if len(str(time_hour)) < 2:
+            time_str = time_str + '0' + str(time_hour)
+        else:
+            time_str = time_str + str(time_hour)
+        if len(str(time_min)) < 2:
+            time_str = time_str + '0' + str(time_min)
+        else:
+            time_str = time_str + str(time_min)
+        if len(str(time_sec)) < 2:
+            time_str = time_str + '0' + str(time_sec)
+        else:
+            time_str = time_str + str(time_sec)
+        return time_str
 
     def id2size(self,id):
         return self.character_size[id]

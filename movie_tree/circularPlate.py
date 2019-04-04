@@ -163,6 +163,7 @@ class sectorPlate(object):
             coord_lists.append(coord_list)
         return coord_lists
 
+
     def getCurrentAngle(self,timestamp):
         timestamp = self.str2sec(timestamp)
         return self.start_angle + self.angle_scale*timestamp
