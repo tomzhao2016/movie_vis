@@ -23,7 +23,7 @@ draw_ellipse = False
 draw_color_sector = True
 draw_motions = False
 
-movie_name = 'the_great_wall'
+movie_name = 'the_golden_flower'
 save_images = False
 
 h_size = 6 # line width
