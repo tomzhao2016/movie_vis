@@ -80,7 +80,7 @@ class circularPlate(object):
         
     
 class sectorPlate(object):
-    def __init__(self,total_time,person_nums,sector_range = 160,canvas_size=(500,500)):
+    def __init__(self,total_time,person_nums,sector_range = 340,canvas_size=(500,500)):
         self.canvas_size = canvas_size
         self.canvas_height, self.canvas_width = canvas_size
 
@@ -97,7 +97,7 @@ class sectorPlate(object):
         self.angle_scale = self.getAngleScale()
 
     def getSectorCenterCoords(self):
-        return self.canvas_width/2,self.canvas_height*(2.0/3.0)
+        return self.canvas_width/2,self.canvas_height*(1.0/2.0)
 
     def getAngleScale(self):
         return self.sector_range/float(self.total_time)
@@ -190,6 +190,7 @@ class sectorPlate(object):
         return self.start_angle + self.angle_scale*timestamp
 
     def drawSector(self):
+        # stroke(0,0,0,20)
         stroke(255,255,255,20)
         start_angle = -(180-(180-self.sector_range)/2.0)/180.0*math.pi
         end_angle = -(180-self.sector_range)/2.0/180.0*math.pi

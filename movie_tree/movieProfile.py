@@ -37,7 +37,7 @@ class movieProfile(object):
             self.data = infile.readlines()
         self.LINE_NUM = len(self.data)
         self.total_time = self.data[-1].split(',')[3]
-        self.plate = sectorPlate(canvas_size=(height, width), total_time=self.total_time, person_nums=18)
+        self.plate = sectorPlate(canvas_size=(height, width), total_time=self.total_time, person_nums=30)
 
         if self.female_file_dir:
             with open(self.female_file_dir, 'r') as female_infile:
@@ -56,7 +56,7 @@ class movieProfile(object):
 
         self.setConstants()
         self.CHARACTER_NUM = len(self.person_id)
-
+        
         self.female_list = self.set_female_list
         self.character_size = self.convertCharacterSize(character_size)
 
@@ -64,7 +64,7 @@ class movieProfile(object):
         if self.female_file_dir:
             self.buildFemaleFile()
         if self.color_file_dir:
-            # self.buildColorFile()
+            # self.buildColorFile() # this for draw_color_lines NOT used in final version
             self.buildColorSectorFile()
 
     def setConstants(self):
@@ -73,6 +73,7 @@ class movieProfile(object):
         count = 0
         for line in self.data:
             line = line.split(',')
+
             source_name = line[4]
             target_names = line[5].split('+')
             start_time = line[2]
@@ -85,8 +86,13 @@ class movieProfile(object):
                     appear_time_dict[target_name] = start_time
                     person_id_dict[target_name] = count
                     count = count + 1
+                    
+        for person_key in person_id_dict.keys():
+            person_id_dict[person_key] = len(person_id_dict)-1-person_id_dict[person_key]
+            
         self.appear_time = appear_time_dict
         self.person_id = person_id_dict
+
 
     @property
     def set_female_list(self):
@@ -115,6 +121,9 @@ class movieProfile(object):
         self.dialog_nums = []
         self.branch_points = []
         self.branch_angs = []
+        self.start_sec = []
+        self.end_sec = []
+
         for line in self.data:
             line = line.split(',')
             dialog_num = int(line[1])
@@ -125,18 +134,20 @@ class movieProfile(object):
             source_x,source_y = self.plate.getCoordinates(start_time,source_id)
 
             target_ids = []
-            target_points = []
+
             for tar_ind in range(len(target_names)):
                 target_id = self.person_id[target_names[tar_ind]]
-                target_x,target_y = self.plate.getCoordinates(end_time, target_id)
                 target_ids.append(target_id)
-                target_points.append((target_x,target_y))
 
             # target ids should be in ascent order
-            if len(target_ids) == 2:
-                if target_ids[0] > target_ids[1]:
-                    target_ids = [target_id for target_id in reversed(target_ids)]
-                    target_points = [target_point for target_point in reversed(target_points)]
+            if len(target_ids) >= 2:
+                # if target_ids[0] > target_ids[1]:
+                target_ids = [target_id for target_id in sorted(target_ids)]
+
+            target_points = []
+            for target_id in target_ids:
+                target_x, target_y = self.plate.getCoordinates(end_time, target_id)
+                target_points.append((target_x, target_y))
 
             if target_ids[-1] > source_id:
                 self.branch_points.append(target_points[-1])
@@ -150,6 +161,9 @@ class movieProfile(object):
             self.target_points.append(target_points)
             self.source_ids.append(source_id)
             self.target_ids.append(target_ids)
+            self.start_sec.append(self.plate.str2sec(start_time))
+            self.end_sec.append(self.plate.str2sec(end_time))
+        self.duration_sec = [end-start for start,end in zip(self.start_sec,self.end_sec)]
 
     def buildFemaleFile(self):
 
@@ -319,3 +333,33 @@ class movieProfile(object):
 
     def drawSector(self):
         self.plate.drawSector()
+
+    def findSector(self,x,y):
+        polar_x = x - self.plate.center_x
+        polar_y = y - self.plate.center_y
+        if (polar_x**2+polar_y**2) > (self.plate.radius_scale*(self.plate.person_nums + 1 + 3))**2:
+            return None
+        if polar_x == 0:
+            return None
+        elif polar_x > 0:
+            polar_angle = math.atan(float(polar_y) / polar_x)
+
+            cur_time_sec = int((-radians(self.plate.start_angle) + math.pi / 2 + polar_angle) / radians(
+                self.plate.angle_scale))
+        else:
+            polar_angle = math.atan(float(polar_y) / polar_x)
+            cur_time_sec = int((-radians(self.plate.start_angle) - math.pi / 2 + polar_angle) / radians(
+                self.plate.angle_scale))
+
+        if cur_time_sec < self.plate.total_time and cur_time_sec >= 0 :
+            return cur_time_sec
+        return None
+        # cur_time_diffs = [cur_time_sec-sec for sec in self.start_sec]
+        # for ind,cur_time_diff in enumerate(cur_time_diffs):
+        #     if cur_time_diff<0:
+        #         if cur_time_diffs[ind-1] <= self.duration_sec[ind-1]:
+        #             return self.start_sec[ind-1]
+        #         else:
+        #             return None
+        # return None
+
